@@ -27,6 +27,7 @@ using namespace std;
 
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 // Protótipos das funções
 int setupShader();
@@ -67,6 +68,10 @@ glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0); //eixo y positivo
 
 float cameraSpeed = 0.05;
 
+bool firstMouse = true;
+float lastX = 0.0, lastY = 0.0;
+float yaw = -90.0, pitch = 0.0;
+
 // Função MAIN
 int main()
 {
@@ -92,6 +97,7 @@ int main()
 
 	// Fazendo o registro da função de callback para a janela GLFW
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
 
 	// GLAD: carrega todos os ponteiros d funções da OpenGL
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -265,6 +271,38 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
 }
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+
+	// cout << xpos << " " << ypos << endl;
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float offsetx = xpos - lastX;
+	float offsety = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	offsetx *= cameraSpeed;
+	offsety *= cameraSpeed;
+
+	pitch += offsety;
+	yaw += offsetx;
+
+	glm::vec3 front;
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(front);
+
+}
+
 
 //Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
 // shader simples e único neste exemplo de código
