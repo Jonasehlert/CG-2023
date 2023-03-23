@@ -40,11 +40,13 @@ const GLchar* vertexShaderSource = "#version 450\n"
 "layout (location = 0) in vec3 position;\n"
 "layout (location = 1) in vec3 color;\n"
 "uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform mat4 projection;\n"
 "out vec4 finalColor;\n"
 "void main()\n"
 "{\n"
 //...pode ter mais linhas de código aqui!
-"gl_Position = model * vec4(position, 1.0);\n"
+"gl_Position = projection * view * model * vec4(position, 1.0);\n"
 "finalColor = vec4(color, 1.0);\n"
 "}\0";
 
@@ -57,7 +59,13 @@ const GLchar* fragmentShaderSource = "#version 450\n"
 "color = finalColor;\n"
 "}\n\0";
 
-bool rotateX=false, rotateY=false, rotateZ=false;
+bool rotateX = false, rotateY = false, rotateZ = false;
+
+glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0); //fica na frente do objeto
+glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); //em relação a z, fica no fundo
+glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0); //eixo y positivo
+
+float cameraSpeed = 0.05;
 
 // Função MAIN
 int main()
@@ -119,6 +127,17 @@ int main()
 	model = glm::rotate(model, /*(GLfloat)glfwGetTime()*/glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
 
+	//Definindo a matriz de view (posição e orientação da câmera)
+	glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+	GLint viewLoc = glGetUniformLocation(shaderID, "view");
+	glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
+
+
+	//Definindo a matriz de projeção perspectiva
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+	GLint projLoc = glGetUniformLocation(shaderID, "projection");
+	glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
+
 	glEnable(GL_DEPTH_TEST);
 
 
@@ -137,11 +156,13 @@ int main()
 
 		float angle = (GLfloat)glfwGetTime();
 
-		model = glm::mat4(1); 
+		model = glm::mat4(1);
+		//model = glm::translate(model, glm::vec3(0.0, 0.0, cos(angle) * 1.0)); //translação em relação ao eixo z
+
 		if (rotateX)
 		{
 			model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-			
+
 		}
 		else if (rotateY)
 		{
@@ -157,14 +178,18 @@ int main()
 		glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
 		// Chamada de desenho - drawcall
 		// Poligono Preenchido - GL_TRIANGLES
-		
+
+		//Alterando a matriz de view (posição e orientação da câmera)
+		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
+
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 18);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		// Chamada de desenho - drawcall
 		// CONTORNO - GL_LINE_LOOP
-		
-		glDrawArrays(GL_POINTS, 0, 18);
+
+		glDrawArrays(GL_POINTS, 0, 36);
 		glBindVertexArray(0);
 
 		// Troca os buffers da tela
@@ -206,8 +231,39 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateZ = true;
 	}
 
+	if (key == GLFW_KEY_W)
+	{
+		cameraPos += cameraSpeed * cameraFront; //aproxima a câmera do cubo
+		//cameraPos += cameraSpeed * cameraUp; //cima da câmera, visualiza o cubo por cima
+	}
 
+	if (key == GLFW_KEY_1)
+	{
+		//cameraPos += cameraSpeed * cameraFront; //aproxima a câmera do cubo
+		cameraPos += cameraSpeed * cameraUp; //cima da câmera, visualiza o cubo por cima
+	}
 
+	if (key == GLFW_KEY_S)
+	{
+		cameraPos -= cameraSpeed * cameraFront; //afasta a câmera do cubo
+		//cameraPos -= cameraSpeed * cameraUp; //baixo da câmera, visualiza o cubo por baixo
+	}
+
+	if (key == GLFW_KEY_2)
+	{
+		//cameraPos -= cameraSpeed * cameraFront; //afasta a câmera do cubo
+		cameraPos -= cameraSpeed * cameraUp; //baixo da câmera, visualiza o cubo por baixo
+	}
+
+	if (key == GLFW_KEY_A) //esquerda da câmera, objeto parado
+	{
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+
+	if (key == GLFW_KEY_D) //direita da câmera, objeto parado
+	{
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
 }
 
 //Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
@@ -273,31 +329,54 @@ int setupGeometry()
 
 		//Base da pirâmide: 2 triângulos
 		//x    y    z    r    g    b
-		-0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
+		-0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
 		-0.5, -0.5,  0.5, 0.0, 1.0, 1.0,
-		 0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
+		 0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
 
-		 -0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
+		 -0.5, -0.5, 0.5, 0.0, 1.0, 1.0,
 		  0.5, -0.5,  0.5, 0.0, 1.0, 1.0,
-		  0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
-
-		 //
-		 -0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
-		  0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
-		  0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
-
-		  -0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
-		  0.0,  0.5,  0.0, 1.0, 0.0, 1.0,
-		  -0.5, -0.5, 0.5, 1.0, 0.0, 1.0,
-
-		   -0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
-		  0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
-		  0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
-
-		   0.5, -0.5, 0.5, 0.0, 1.0, 1.0,
-		  0.0,  0.5,  0.0, 0.0, 1.0, 1.0,
 		  0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
 
+		  //
+		  0.5, 0.5, 0.5, 1.0, 1.0, 0.0, //topo
+		  0.5, 0.5, -0.5, 1.0, 1.0, 0.0,
+		  -0.5, 0.5, 0.5, 1.0, 1.0, 0.0,
+
+		   0.5,  0.5, -0.5, 1.0, 1.0, 0.0,
+		   -0.5, 0.5, -0.5, 1.0, 1.0, 0.0,
+		   -0.5, 0.5, 0.5, 1.0, 1.0, 0.0, //fechamento do topo
+
+		   -0.5, -0.5, 0.5, 1.0, 0.0, 0.0,
+		   0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
+		   0.5, -0.5, 0.5, 1.0, 0.0, 0.0, //triângulo de um lado 1
+
+		   -0.5, -0.5, 0.5, 1.0, 0.0, 0.0,
+		   0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
+		   -0.5,  0.5, 0.5, 1.0, 0.0, 0.0, //fechamento triângulo 1
+
+		   0.5, 0.5, -0.5, 0.0, 1.0, 0.0,
+		   -0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
+		   -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, //triângulo de um lado 2
+
+		   0.5, 0.5, -0.5, 0.0, 1.0, 0.0,
+		   -0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
+		   0.5, -0.5, -0.5, 0.0, 1.0, 0.0, //fechamento triângulo 2
+
+			-0.5, -0.5, 0.5, 0.0, 0.0, 1.0,
+			-0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+		   -0.5, -0.5, -0.5, 0.0, 0.0, 1.0, //triângulo de um lado 3 correto
+
+			-0.5, -0.5, -0.5, 0.0, 0.0, 1.0,
+			-0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+		   -0.5, 0.5, -0.5, 0.0, 0.0, 1.0, //fechamento triângulo 3
+
+			0.5, 0.5, -0.5, 1.0, 1.0, 0.0,
+			0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
+		   0.5, 0.5, 0.5, 1.0, 1.0, 0.0, //triângulo de um lado 4 correto
+
+		   0.5, 0.5, 0.5, 1.0, 1.0, 0.0,
+			0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
+		   0.5, -0.5, 0.5, 1.0, 1.0, 0.0, //fechamento triângulo 4
 
 	};
 
@@ -318,7 +397,7 @@ int setupGeometry()
 	// Vincula (bind) o VAO primeiro, e em seguida  conecta e seta o(s) buffer(s) de vértices
 	// e os ponteiros para os atributos 
 	glBindVertexArray(VAO);
-	
+
 	//Para cada atributo do vertice, criamos um "AttribPointer" (ponteiro para o atributo), indicando: 
 	// Localização no shader * (a localização dos atributos devem ser correspondentes no layout especificado no vertex shader)
 	// Numero de valores que o atributo tem (por ex, 3 coordenadas xyz) 
@@ -326,13 +405,13 @@ int setupGeometry()
 	// Se está normalizado (entre zero e um)
 	// Tamanho em bytes 
 	// Deslocamento a partir do byte zero 
-	
+
 	//Atributo posição (x, y, z)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
 	//Atributo cor (r, g, b)
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 
 
