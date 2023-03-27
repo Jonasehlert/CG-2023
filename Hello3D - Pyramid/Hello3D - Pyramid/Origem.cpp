@@ -4,7 +4,10 @@
  * para a disciplina de Processamento Gráfico/Computação Gráfica - Unisinos
  * Versão inicial: 7/4/2017
  * Última atualização em 01/03/2023
- *
+ * 
+ * Modificações conforme andamento da disciplina de Computação Gráfica em 2023/1
+ * Modificado por Jonas Dall Agnol Ehlert
+ * Última modificação em 27/03/2023
  */
 
 #include <iostream>
