@@ -99,6 +99,11 @@ int main()
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 
+	glfwSetCursorPos(window, WIDTH / 2, HEIGHT / 2);
+
+	// Desabilita o desenho do cursor
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// GLAD: carrega todos os ponteiros d funções da OpenGL
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -190,12 +195,12 @@ int main()
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
 
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, 42);
 
 		// Chamada de desenho - drawcall
 		// CONTORNO - GL_LINE_LOOP
 
-		glDrawArrays(GL_POINTS, 0, 36);
+		glDrawArrays(GL_POINTS, 0, 42);
 		glBindVertexArray(0);
 
 		// Troca os buffers da tela
@@ -261,12 +266,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		cameraPos -= cameraSpeed * cameraUp; //baixo da câmera, visualiza o cubo por baixo
 	}
 
-	if (key == GLFW_KEY_A) //esquerda da câmera, objeto parado
+	if (key == GLFW_KEY_3) //esquerda da câmera, objeto parado
 	{
 		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
 
-	if (key == GLFW_KEY_D) //direita da câmera, objeto parado
+	if (key == GLFW_KEY_4) //direita da câmera, objeto parado
 	{
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
@@ -415,6 +420,16 @@ int setupGeometry()
 		   0.5, 0.5, 0.5, 1.0, 1.0, 0.0,
 			0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
 		   0.5, -0.5, 0.5, 1.0, 1.0, 0.0, //fechamento triângulo 4
+
+		   //Chão
+		 
+		 -5.0, -0.5, -5.0, 0.3, 0.3, 0.3,
+		 -5.0, -0.5,  5.0, 0.3, 0.3, 0.3,
+		  5.0, -0.5, -5.0, 0.3, 0.3, 0.3,
+
+		 -5.0, -0.5,  5.0, 0.3, 0.3, 0.3,
+		  5.0, -0.5,  5.0, 0.3, 0.3, 0.3,
+		  5.0, -0.5, -5.0, 0.3, 0.3, 0.3
 
 	};
 
