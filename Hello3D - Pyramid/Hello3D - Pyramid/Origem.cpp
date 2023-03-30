@@ -31,6 +31,8 @@ using namespace std;
 // Protótipo da função de callback de teclado e mouse
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
 
 // Protótipos das funções
 int setupShader();
@@ -75,6 +77,11 @@ bool firstMouse = true;
 float lastX = 0.0, lastY = 0.0;
 float yaw = -90.0, pitch = 0.0;
 
+float fov = 45.0f;
+
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
+
 // Função MAIN
 int main()
 {
@@ -101,6 +108,7 @@ int main()
 	// Fazendo o registro da função de callback para a janela GLFW
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	glfwSetCursorPos(window, WIDTH / 2, HEIGHT / 2);
 
@@ -158,6 +166,11 @@ int main()
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
 	{
+
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		// Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
 		glfwPollEvents();
 
@@ -196,6 +209,9 @@ int main()
 		//Alterando a matriz de view (posição e orientação da câmera)
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
+
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+		glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 42);
@@ -247,8 +263,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_W)
 	{
-		cameraPos += cameraSpeed * cameraFront; //aproxima a câmera do cubo
-		//cameraPos += cameraSpeed * cameraUp; //cima da câmera, visualiza o cubo por cima
+		//cameraPos += cameraSpeed * cameraFront; //aproxima a câmera do cubo
+		cameraPos += cameraSpeed * cameraUp; //cima da câmera, visualiza o cubo por cima
 	}
 
 	if (key == GLFW_KEY_1)
@@ -259,8 +275,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_S)
 	{
-		cameraPos -= cameraSpeed * cameraFront; //afasta a câmera do cubo
-		//cameraPos -= cameraSpeed * cameraUp; //baixo da câmera, visualiza o cubo por baixo
+		//cameraPos -= cameraSpeed * cameraFront; //afasta a câmera do cubo
+		cameraPos -= cameraSpeed * cameraUp; //baixo da câmera, visualiza o cubo por baixo
 	}
 
 	if (key == GLFW_KEY_2)
@@ -274,7 +290,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
 
+	if (key == GLFW_KEY_A) //esquerda da câmera, objeto parado
+	{
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+
 	if (key == GLFW_KEY_4) //direita da câmera, objeto parado
+	{
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+
+	if (key == GLFW_KEY_D) //direita da câmera, objeto parado
 	{
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
@@ -311,6 +337,30 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 }
 
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if (fov >= 1.0f && fov <= 45.0f)
+	{
+		fov -= yoffset;
+	}
+		
+	if (fov <= 1.0f)
+	{
+		fov = 1.0f;
+	}
+		
+	if (fov >= 45.0f)
+	{
+		fov = 45.0f;
+	}
+
+}
+
+void processInput(GLFWwindow* window)
+{
+	cameraSpeed = 2.5f * deltaTime;
+
+}
 
 //Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
 // shader simples e único neste exemplo de código
