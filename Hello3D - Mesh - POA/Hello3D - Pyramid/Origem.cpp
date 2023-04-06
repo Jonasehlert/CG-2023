@@ -416,6 +416,9 @@ int setupGeometry()
 
 	};
 
+	nVertices = vertbuffer.size() / 6;
+
+
 	GLuint VBO, VAO;
 
 	//Geração do identificador do VBO
