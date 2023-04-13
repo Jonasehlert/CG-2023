@@ -1,11 +1,11 @@
-/* Hello Triangle - código adaptado de https://learnopengl.com/#!Getting-started/Hello-Triangle
- *
- * Adaptado por Rossana Baptista Queiroz
- * para a disciplina de Processamento Gráfico/Computação Gráfica - Unisinos
- * Versão inicial: 7/4/2017
- * Última atualização em 01/03/2023
- *
- */
+/* Hello Triangle - código adaptado de https ://learnopengl.com/#!Getting-started/Hello-Triangle
+*
+*Adaptado por Rossana Baptista Queiroz
+* para a disciplina de Processamento Gráfico / Computação Gráfica - Unisinos
+* Versão inicial : 7 / 4 / 2017
+* Última atualização em 01 / 03 / 2023
+*
+*/
 
 #include <iostream>
 #include <string>
@@ -193,8 +193,8 @@ int main()
 		// Chamada de desenho - drawcall
 		// CONTORNO - GL_LINE_LOOP
 
-		glDrawArrays(GL_POINTS, 0, nVertices);
-		glBindVertexArray(0);
+		//glDrawArrays(GL_POINTS, 0, nVertices);
+		//glBindVertexArray(0);
 
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
@@ -496,3 +496,4 @@ int loadSimpleObj(string filePath, int& nVertices)
 	return VAO;
 
 }
+
