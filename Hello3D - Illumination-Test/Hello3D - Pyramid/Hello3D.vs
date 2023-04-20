@@ -9,11 +9,18 @@ layout (location = 3) in vec3 normal;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-out vec4 finalColor;
+
+out vec3 finalColor;
+out vec3 scaledNormal;
+out vec4 fragmentPos;
 
 void main()
 {
 	//...pode ter mais linhas de código aqui!
 	gl_Position = projection * view * model * vec4(position, 1.0);
-	finalColor = vec4(color, 1.0);
+	finalColor = vec3(color, 1.0);
+	//Vetor normal escalada
+	scaledNormal = mat3(transpose(inverse(model))) * normal;
+	//Posição do vértice com a transformação do objeto
+	fragmentPos = model * vec4(position, 1.0);
 }

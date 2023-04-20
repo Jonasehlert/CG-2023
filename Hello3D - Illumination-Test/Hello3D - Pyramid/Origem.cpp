@@ -144,6 +144,17 @@ int main()
 	GLint projLoc = glGetUniformLocation(shader.ID, "projection");
 	glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
 
+	//Definindo as propriedades do material
+	shader.setFloat("ka", 0.2);
+	shader.setFloat("kd", 0.5);
+	shader.setFloat("ks", 0.5);
+	shader.setFloat("n", 10);
+
+	//Definindo as propriedades da fonte de luz
+	shader.setVec3("lightPos", 0.0f, 5.0f, 0.0f);
+	shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+
 	glEnable(GL_DEPTH_TEST);
 
 
@@ -187,7 +198,8 @@ int main()
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
 
-
+		//Enviando a posição da câmera paa o shader
+		shader.setVec3("cameraPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
 		// Chamada de desenho - drawcall
 		// Poligono Preenchido - GL_TRIANGLES
