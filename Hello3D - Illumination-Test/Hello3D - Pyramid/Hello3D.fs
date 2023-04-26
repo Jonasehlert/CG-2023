@@ -4,8 +4,7 @@
 //Informações recebidas do vertex shader
 in vec3 finalColor;
 in vec3 scaledNormal;
-in vec4 fragPos;
-
+in vec3 fragPos;
 
 //Propriedades do material do objeto
 uniform float ka;
@@ -17,26 +16,26 @@ uniform float n;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
-//Posição da câmera
-
+//Posição da câmera 
 uniform vec3 cameraPos;
 
-//Buffer de saída (color Buffer)
+//Buffer de saída (color buffer)
 out vec4 color;
 
 void main()
 {
-    //Ambient
-    vec3 ambient = lightcolor * ka;
-
-    //Difusse
-    vec3 diffuse = 0.0f;
-
-    //specular
-    vec3 specular = 0.0f;
-
-    vec3 result = (ambient + difusse) * finalColor + specular;
+    // Ambient
+    vec3 ambient =  lightColor * ka;
+    // Diffuse 
+    vec3 N = normalize(scaledNormal);
+    vec3 L = normalize(lightPos - fragPos);
+    float diff = max(dot(N, L), 0.0);
+    vec3 diffuse = diff * lightColor * kd;
     
+    // Specular
+    vec3 specular = vec3(0.0,0.0,0.0);
+        
+    vec3 result = (ambient + diffuse) * finalColor;// + specular;
 
-    color = vec4(result + 1.0f);
+    color = vec4(result, 1.0f);
 }
