@@ -117,10 +117,11 @@ int main()
 
 	// Gerando um buffer simples, com a geometria de um triângulo
 	int nVertices;
+	int nVertices1;
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Classic/bunny.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Cube/cube.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices);
-	GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices);
+	GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices1); //loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices);
 	GLuint VAO2 = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices,glm::vec3(0.0,1.0,0.0));
 	GLuint VAO3 = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices, glm::vec3(0.0, 0.0, 1.0));
 
@@ -153,7 +154,7 @@ int main()
 	shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 	Mesh suzanne1, suzanne2, suzanne3;
-	suzanne1.initialize(VAO, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
+	suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
 	suzanne2.initialize(VAO2, nVertices, &shader);
 	suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
 
