@@ -29,6 +29,8 @@ using namespace std;
 
 #include "Shader.h"
 
+#include "Mesh.h"
+
 
 struct Vertex
 {
@@ -42,13 +44,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 // Protótipos das funções
 int setupGeometry();
-int loadSimpleObj(string filePath, int& nVertices);
-
+int loadSimpleObj(string filePath, int& nVertices, glm::vec3 color = glm::vec3(1.0,0.0,0.0));
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-bool rotateX = false, rotateY = false, rotateZ = false;
+bool rotateX=false, rotateY=false, rotateZ=false;
 
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0);
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
@@ -58,11 +59,6 @@ float cameraSpeed = 0.05;
 bool firstMouse = true;
 float lastX = 0.0, lastY = 0.0;
 float yaw = -90.0, pitch = 0.0;
-
-vector <Vertex> vertices;
-vector <int> indices;
-vector <glm::vec3> normals;
-vector <glm::vec2> texCoord;
 
 
 // Função MAIN
@@ -85,7 +81,7 @@ int main()
 //#endif
 
 	// Criação da janela GLFW
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Triangulo!", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Visualizador 3D!", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 
 	// Fazendo o registro da função de callback para a janela GLFW
@@ -123,8 +119,10 @@ int main()
 	int nVertices;
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Classic/bunny.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Cube/cube.obj", nVertices);
-	GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices);
-	//GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTri.obj", nVertices);
+	//GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices);
+	GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices);
+	GLuint VAO2 = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices,glm::vec3(0.0,1.0,0.0));
+	GLuint VAO3 = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices, glm::vec3(0.0, 0.0, 1.0));
 
 	glUseProgram(shader.ID);
 
@@ -145,14 +143,19 @@ int main()
 	glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
 
 	//Definindo as propriedades do material 
-	shader.setFloat("ka", 0.2);
+	shader.setFloat("ka", 0.4);
 	shader.setFloat("kd", 0.5);
 	shader.setFloat("ks", 0.5);
 	shader.setFloat("q", 10);
 
 	//Definindo as propriedades da fonte de luz
-	shader.setVec3("lightPos", -2.0f, 10.0f, 2.0f);
+	shader.setVec3("lightPos", -2.0f, 10.0f, 3.0f);
 	shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+	Mesh suzanne1, suzanne2, suzanne3;
+	suzanne1.initialize(VAO, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
+	suzanne2.initialize(VAO2, nVertices, &shader);
+	suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
 
 
 	glEnable(GL_DEPTH_TEST);
@@ -170,29 +173,6 @@ int main()
 		glLineWidth(10);
 		glPointSize(20);
 
-		float angle = (GLfloat)glfwGetTime();
-
-		model = glm::mat4(1);
-
-		// model = glm::translate(model, glm::vec3(0.0, 0.0, cos(angle) * 10.0));
-		if (rotateX)
-		{
-			model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-
-		}
-		else if (rotateY)
-		{
-			model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-
-		}
-		else if (rotateZ)
-		{
-			model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-
-		}
-
-		glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
-
 		//Alterando a matriz de view (posição e orientação da câmera)
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
@@ -201,16 +181,14 @@ int main()
 		shader.setVec3("cameraPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
 		// Chamada de desenho - drawcall
-		// Poligono Preenchido - GL_TRIANGLES
+		suzanne1.update();
+		suzanne1.draw();
 
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, nVertices);
+		suzanne2.update();
+		suzanne2.draw();
 
-		// Chamada de desenho - drawcall
-		// CONTORNO - GL_LINE_LOOP
-
-		//glDrawArrays(GL_POINTS, 0, nVertices);
-		//glBindVertexArray(0);
+		suzanne3.update();
+		suzanne3.draw();
 
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
@@ -330,31 +308,31 @@ int setupGeometry()
 		  0.5, -0.5,  0.5, 0.0, 1.0, 1.0,
 		  0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
 
-		  //
-		  -0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
-		   0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
-		   0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
+		 //
+		 -0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
+		  0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
+		  0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
 
-		   -0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
-		   0.0,  0.5,  0.0, 1.0, 0.0, 1.0,
-		   -0.5, -0.5, 0.5, 1.0, 0.0, 1.0,
+		  -0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
+		  0.0,  0.5,  0.0, 1.0, 0.0, 1.0,
+		  -0.5, -0.5, 0.5, 1.0, 0.0, 1.0,
 
-			-0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
-		   0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
-		   0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
+		   -0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
+		  0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
+		  0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
 
-			0.5, -0.5, 0.5, 0.0, 1.0, 1.0,
-		   0.0,  0.5,  0.0, 0.0, 1.0, 1.0,
-		   0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
+		   0.5, -0.5, 0.5, 0.0, 1.0, 1.0,
+		  0.0,  0.5,  0.0, 0.0, 1.0, 1.0,
+		  0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
 
-		   //"Chão"
-		   -5.0, -0.5, -5.0, 0.5, 0.5, 0.5,
-		   -5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
-			5.0, -0.5, -5.0, 0.5, 0.5, 0.5,
+		  //"Chão"
+		  -5.0, -0.5, -5.0, 0.5, 0.5, 0.5,
+		  -5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
+		   5.0, -0.5, -5.0, 0.5, 0.5, 0.5,
 
-		   -5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
-			5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
-			5.0, -0.5, -5.0, 0.5, 0.5, 0.5
+		  -5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
+		   5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
+		   5.0, -0.5, -5.0, 0.5, 0.5, 0.5
 
 
 	};
@@ -376,7 +354,7 @@ int setupGeometry()
 	// Vincula (bind) o VAO primeiro, e em seguida  conecta e seta o(s) buffer(s) de vértices
 	// e os ponteiros para os atributos 
 	glBindVertexArray(VAO);
-
+	
 	//Para cada atributo do vertice, criamos um "AttribPointer" (ponteiro para o atributo), indicando: 
 	// Localização no shader * (a localização dos atributos devem ser correspondentes no layout especificado no vertex shader)
 	// Numero de valores que o atributo tem (por ex, 3 coordenadas xyz) 
@@ -384,13 +362,13 @@ int setupGeometry()
 	// Se está normalizado (entre zero e um)
 	// Tamanho em bytes 
 	// Deslocamento a partir do byte zero 
-
+	
 	//Atributo posição (x, y, z)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
 	//Atributo cor (r, g, b)
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 
 
@@ -405,17 +383,22 @@ int setupGeometry()
 	return VAO;
 }
 
-int loadSimpleObj(string filePath, int& nVertices)
+int loadSimpleObj(string filePath, int& nVertices, glm::vec3 color)
 {
 	ifstream inputFile;
 	inputFile.open(filePath);
 	vector <GLfloat> vertbuffer;
 
+	vector <Vertex> vertices;
+	vector <int> indices;
+	vector <glm::vec3> normals;
+	vector <glm::vec2> texCoord;
+
 	if (inputFile.is_open())
 	{
 		char line[100];
 		string sline;
-
+		
 
 		while (!inputFile.eof())
 		{
@@ -431,7 +414,7 @@ int loadSimpleObj(string filePath, int& nVertices)
 			{
 				Vertex v;
 				ssline >> v.position.x >> v.position.y >> v.position.z;
-				v.v_color.r = 1.0; v.v_color.g = 0.0; v.v_color.b = 0.0;
+				v.v_color.r = color.r; v.v_color.g = color.g; v.v_color.b = color.b;
 				vertices.push_back(v);
 			}
 			if (word == "vt")
@@ -478,9 +461,9 @@ int loadSimpleObj(string filePath, int& nVertices)
 					vertbuffer.push_back(normals[indexN].x);
 					vertbuffer.push_back(normals[indexN].y);
 					vertbuffer.push_back(normals[indexN].z);
-
+					
 				}
-
+			
 			}
 
 		}
@@ -547,3 +530,4 @@ int loadSimpleObj(string filePath, int& nVertices)
 	return VAO;
 
 }
+
