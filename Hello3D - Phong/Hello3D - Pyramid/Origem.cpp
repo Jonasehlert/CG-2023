@@ -49,7 +49,9 @@ int loadSimpleObj(string filePath, int& nVertices, glm::vec3 color = glm::vec3(1
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-bool rotateX=false, rotateY=false, rotateZ=false;
+bool rotateX=false, rotateY=false, rotateZ=false, stopRotate=false;
+
+int selec = 0;
 
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0);
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
@@ -174,6 +176,70 @@ int main()
 		glLineWidth(10);
 		glPointSize(20);
 
+		float angle = (GLfloat)glfwGetTime();
+
+		model = glm::mat4(1);
+
+		if (rotateX)
+		{
+			if (selec == 1)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.update();
+				suzanne1.draw();
+			}
+
+			if (selec == 2)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 3)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.update();
+				suzanne3.draw();
+			}
+
+		}
+
+		if (stopRotate)
+		{
+			rotateX = false;
+			rotateY = false;
+			rotateZ = false;
+
+			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
+			suzanne2.initialize(VAO2, nVertices, &shader);
+			suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
+
+			stopRotate = false;
+
+		}
+			
+		else if (rotateY)
+		{
+			//model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+			suzanne1.update();
+			suzanne1.draw();
+
+		}
+		else if (rotateZ)
+		{
+			//model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+			//suzanne1.update();
+			//suzanne1.draw();
+
+		}
+
+
 		//Alterando a matriz de view (posição e orientação da câmera)
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
@@ -216,6 +282,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateZ = false;
 	}
 
+	if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+	{
+		selec = 1;
+	}
+
+	if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+	{
+		selec = 2;
+	}
+
+	if (key == GLFW_KEY_3 && action == GLFW_PRESS)
+	{
+		selec = 3;
+	}
+
 	if (key == GLFW_KEY_Y && action == GLFW_PRESS)
 	{
 		rotateX = false;
@@ -228,6 +309,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateX = false;
 		rotateY = false;
 		rotateZ = true;
+	}
+
+	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	{
+		stopRotate = true;
 	}
 
 	if (key == GLFW_KEY_W)
