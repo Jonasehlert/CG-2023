@@ -50,6 +50,7 @@ int loadSimpleObj(string filePath, int& nVertices, glm::vec3 color = glm::vec3(1
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
 bool rotateX=false, rotateY=false, rotateZ=false, stopRotate=false;
+bool translateX = false, translateY = false, translateZ = false, stopTranslate = false;
 
 int selec = 0;
 
@@ -225,17 +226,78 @@ int main()
 		else if (rotateY)
 		{
 			//model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-			suzanne1.update();
-			suzanne1.draw();
+			if(selec == 1)
+			{
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+				suzanne1.update();
+				suzanne1.draw();
+			}
+
+			if (selec == 2)
+			{
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 3)
+			{
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+				suzanne3.update();
+				suzanne3.draw();
+			}
 
 		}
 		else if (rotateZ)
 		{
 			//model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-			//suzanne1.update();
-			//suzanne1.draw();
+			if (selec == 1)
+			{
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+				suzanne1.update();
+				suzanne1.draw();
+			}
+
+			if (selec == 2)
+			{
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 3)
+			{
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+				suzanne3.update();
+				suzanne3.draw();
+			}
+		}
+
+		if (translateX)
+		{
+			if (selec == 1)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
+				suzanne1.update();
+				suzanne1.draw();
+			}
+
+			if (selec == 2)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 3)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
+				suzanne3.update();
+				suzanne3.draw();
+			}
 
 		}
 
@@ -311,9 +373,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateZ = true;
 	}
 
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	if (key == GLFW_KEY_P && action == GLFW_PRESS) //para qualquer movimento de rotação e volta a posição original dos objetos
 	{
 		stopRotate = true;
+	}
+
+	if (key == GLFW_KEY_J && action == GLFW_PRESS)
+	{
+		translateX = true;
+		translateY = false;
+		translateZ = false;
 	}
 
 	if (key == GLFW_KEY_W)
