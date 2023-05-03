@@ -442,6 +442,9 @@ int main()
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
 
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+		glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
+
 		//Enviando a posição da camera para o shader
 		shader.setVec3("cameraPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
@@ -568,7 +571,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
-
 
 
 }
