@@ -1,0 +1,27 @@
+#####################################################################################
+
+Controle do Programa
+
+teclas W,A,S,D - movimento da câmera
+Mouse movimenta a câmera também
+Scroll do mouse dá zoom in e zoom out dos objetos
+
+Seleção de Objetos
+Tecla 1 - seleciona o Pikachu
+Tecla 2 - seleciona primeira Suzanne (verde)
+Tecla 3 - seleciona segunda Suzanne (azul)
+
+Rotação 
+Tecla X - rotaciona em X
+Tecla Y - rotaciona em Y
+Tecla Z - rotaciona em Z
+Tecla P - encerra rotação e volta a posição original
+
+Translação
+Tecla J - translada em X
+Tecla K - translada em Y
+Tecla L - translada em Z
+
+Escala
+Tecla N - diminui a escala do objeto pela metade
+Tecla M - volta a escala original
