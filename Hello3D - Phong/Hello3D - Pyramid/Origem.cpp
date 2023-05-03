@@ -41,6 +41,8 @@ struct Vertex
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
 
 // Protótipos das funções
 int setupGeometry();
@@ -52,6 +54,8 @@ const GLuint WIDTH = 1000, HEIGHT = 1000;
 bool rotateX=false, rotateY=false, rotateZ=false, stopRotate=false;
 bool translateX = false, translateY = false, translateZ = false, stopTranslate = false;
 
+bool scale;
+
 int selec = 0;
 
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0);
@@ -62,6 +66,11 @@ float cameraSpeed = 0.05;
 bool firstMouse = true;
 float lastX = 0.0, lastY = 0.0;
 float yaw = -90.0, pitch = 0.0;
+
+float fov = 45.0f;
+
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
 
 
 // Função MAIN
@@ -89,9 +98,9 @@ int main()
 
 	// Fazendo o registro da função de callback para a janela GLFW
 	glfwSetKeyCallback(window, key_callback);
-	//glfwSetCursorPos(window, WIDTH / 2, HEIGHT / 2);
 	glfwSetCursorPosCallback(window, mouse_callback);
-
+	glfwSetScrollCallback(window, scroll_callback);
+	//glfwSetCursorPos(window, WIDTH / 2, HEIGHT / 2);
 
 	//Desabilita o desenho do cursor do mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -166,7 +175,11 @@ int main()
 
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
-	{
+	{	
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		
 		// Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
 		glfwPollEvents();
 
@@ -278,7 +291,7 @@ int main()
 			if (selec == 1)
 			{
 				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(3.0, 0.0, 0.0));
 				suzanne1.update();
 				suzanne1.draw();
 			}
@@ -286,7 +299,7 @@ int main()
 			if (selec == 2)
 			{
 				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
 				suzanne2.update();
 				suzanne2.draw();
 			}
@@ -294,13 +307,136 @@ int main()
 			if (selec == 3)
 			{
 				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0));
 				suzanne3.update();
 				suzanne3.draw();
 			}
 
 		}
 
+		if (translateY)
+		{
+			if (selec == 1)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(3.0, 3.0, 0.0));
+				suzanne1.update();
+				suzanne1.draw();
+			}
+
+			if (selec == 2)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 3)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(0.0, -3.0, 0.0));
+				suzanne3.update();
+				suzanne3.draw();
+			}
+
+		}
+
+		if (translateZ)
+		{
+			if (selec == 1)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(3.0, 3.0, 3.0));
+				suzanne1.update();
+				suzanne1.draw();
+			}
+
+			if (selec == 2)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 3)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(0.0, -3.0, -3.0));
+				suzanne3.update();
+				suzanne3.draw();
+			}
+
+		}
+
+		if (stopTranslate)
+		{
+			translateX = false;
+			translateY = false;
+			translateZ = false;
+
+			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
+			suzanne2.initialize(VAO2, nVertices, &shader);
+			suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
+
+			stopTranslate = false;
+
+		}
+
+		if (scale)
+		{
+			if (selec == 1)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(0.5, 0.5, 0.5));
+				suzanne2.update();
+				suzanne2.draw();
+			}
+
+			if (selec == 2)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.5, 0.5, 0.5));
+				suzanne2.update();
+				suzanne2.draw();
+				
+			}
+
+			if (selec == 3)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(0.5, 0.5, 0.5));
+				suzanne2.update();
+				suzanne2.draw();
+				
+			}
+
+		}
+
+		if (scale == false)
+		{
+			if (selec == 1)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
+			}
+
+			if (selec == 2)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
+
+			}
+
+			if (selec == 3)
+			{
+				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
+
+			}
+
+		}
 
 		//Alterando a matriz de view (posição e orientação da câmera)
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -376,6 +512,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_P && action == GLFW_PRESS) //para qualquer movimento de rotação e volta a posição original dos objetos
 	{
 		stopRotate = true;
+		stopTranslate = true;
 	}
 
 	if (key == GLFW_KEY_J && action == GLFW_PRESS)
@@ -384,6 +521,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		translateY = false;
 		translateZ = false;
 	}
+
+	if (key == GLFW_KEY_K && action == GLFW_PRESS)
+	{
+		translateX = false;
+		translateY = true;
+		translateZ = false;
+	}
+
+	if (key == GLFW_KEY_L && action == GLFW_PRESS)
+	{
+		translateX = false;
+		translateY = false;
+		translateZ = true;
+	}
+
+
+	if (key == GLFW_KEY_N && action == GLFW_PRESS)
+	{
+		scale = true;
+	}
+
+	if (key == GLFW_KEY_M && action == GLFW_PRESS)
+	{
+		scale = false;
+	}
+
+
 
 	if (key == GLFW_KEY_W)
 	{
@@ -437,6 +601,31 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	front.y = sin(glm::radians(pitch));
 	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	cameraFront = glm::normalize(front);
+
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if (fov >= 1.0f && fov <= 45.0f)
+	{
+		fov -= yoffset;
+	}
+
+	if (fov <= 1.0f)
+	{
+		fov = 1.0f;
+	}
+
+	if (fov >= 45.0f)
+	{
+		fov = 45.0f;
+	}
+
+}
+
+void processInput(GLFWwindow* window)
+{
+	cameraSpeed = 2.5f * deltaTime;
 
 }
 
