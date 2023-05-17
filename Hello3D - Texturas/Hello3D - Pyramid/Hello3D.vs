@@ -13,6 +13,7 @@ uniform mat4 projection;
 out vec3 finalColor;
 out vec3 scaledNormal;
 out vec3 fragPos;
+out vec2 texCoord;
 
 void main()
 {
@@ -23,4 +24,5 @@ void main()
 	scaledNormal = normal; // mat3(transpose(inverse(model))) * normal;
 	//Posição do vértice com a transformação do objeto 
 	fragPos = vec3(model * vec4(position, 1.0));
+	texCoord = vec2(texc.x,1-texc.y);
 }

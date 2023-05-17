@@ -5,6 +5,7 @@
 in vec3 finalColor;
 in vec3 scaledNormal;
 in vec3 fragPos;
+in vec2 texCoord;
 
 //Propriedades do material do objeto
 uniform float ka;
@@ -22,6 +23,9 @@ uniform vec3 cameraPos;
 //Buffer de saída (color buffer)
 out vec4 color;
 
+//buffer de textura
+uniform sampler2D colorBuffer;
+
 void main()
 {
     // Ambient
@@ -37,8 +41,9 @@ void main()
     vec3 V = normalize(cameraPos - fragPos);
     float spec = pow(max(dot(R,V),0.0),q);
     vec3 specular = spec * ks * lightColor;
-        
-    vec3 result = (ambient + diffuse) * finalColor + specular;
+    
+    vec4 texColor = texture(colorBuffer,texCoord);
+    vec3 result = (ambient + diffuse) * vec3(texColor) + specular;
 
     color = vec4(result, 1.0f);
 }

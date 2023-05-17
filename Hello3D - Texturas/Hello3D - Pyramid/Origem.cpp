@@ -27,6 +27,8 @@ using namespace std;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <stb_image.h>
+
 #include "Shader.h"
 
 #include "Mesh.h"
@@ -41,22 +43,16 @@ struct Vertex
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow* window);
 
 // Protótipos das funções
 int setupGeometry();
 int loadSimpleObj(string filePath, int& nVertices, glm::vec3 color = glm::vec3(1.0,0.0,0.0));
+int generateTexture(string filePath);
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-bool rotateX=false, rotateY=false, rotateZ=false, stopRotate=false;
-bool translateX = false, translateY = false, translateZ = false, stopTranslate = false;
-
-bool scale;
-
-int selec = 0;
+bool rotateX=false, rotateY=false, rotateZ=false;
 
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0);
 glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
@@ -66,11 +62,6 @@ float cameraSpeed = 0.05;
 bool firstMouse = true;
 float lastX = 0.0, lastY = 0.0;
 float yaw = -90.0, pitch = 0.0;
-
-float fov = 45.0f;
-
-float deltaTime = 0.0f;	// time between current frame and last frame
-float lastFrame = 0.0f;
 
 
 // Função MAIN
@@ -98,9 +89,9 @@ int main()
 
 	// Fazendo o registro da função de callback para a janela GLFW
 	glfwSetKeyCallback(window, key_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
 	//glfwSetCursorPos(window, WIDTH / 2, HEIGHT / 2);
+	glfwSetCursorPosCallback(window, mouse_callback);
+
 
 	//Desabilita o desenho do cursor do mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -127,16 +118,16 @@ int main()
 	// Compilando e buildando o programa de shader
 	Shader shader("Hello3D.vs", "Hello3D.fs");
 
+	GLuint texID = generateTexture("../../3D_models/Suzanne/example.bmp");
+
+
 	// Gerando um buffer simples, com a geometria de um triângulo
 	int nVertices;
-	int nVertices1;
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Classic/bunny.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Cube/cube.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices);
-	GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices1); //loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices);
-	GLuint VAO2 = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices,glm::vec3(0.0,1.0,0.0));
-	GLuint VAO3 = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowPoly.obj", nVertices, glm::vec3(0.0, 0.0, 1.0));
-
+	GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/bola.obj", nVertices);
+	
 	glUseProgram(shader.ID);
 
 	glm::mat4 model = glm::mat4(1); //matriz identidade;
@@ -165,21 +156,19 @@ int main()
 	shader.setVec3("lightPos", -2.0f, 10.0f, 3.0f);
 	shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	Mesh suzanne1, suzanne2, suzanne3;
-	suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
-	suzanne2.initialize(VAO2, nVertices, &shader);
-	suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
+	Mesh mesh;
+	mesh.initialize(VAO, nVertices, &shader, texID, glm::vec3(0.0, 0.0, 0.0));
+	
+
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(shader.ID, "colorBuffer"), 0);
 
 
 	glEnable(GL_DEPTH_TEST);
 
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
-	{	
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-		
+	{
 		// Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
 		glfwPollEvents();
 
@@ -190,273 +179,18 @@ int main()
 		glLineWidth(10);
 		glPointSize(20);
 
-		float angle = (GLfloat)glfwGetTime();
-
-		model = glm::mat4(1);
-
-		if (rotateX)
-		{
-			if (selec == 1)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.update();
-				suzanne1.draw();
-			}
-
-			if (selec == 2)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 3)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.update();
-				suzanne3.draw();
-			}
-
-		}
-
-		if (stopRotate)
-		{
-			rotateX = false;
-			rotateY = false;
-			rotateZ = false;
-
-			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
-			suzanne2.initialize(VAO2, nVertices, &shader);
-			suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
-
-			stopRotate = false;
-
-		}
-			
-		else if (rotateY)
-		{
-			//model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-			if(selec == 1)
-			{
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-				suzanne1.update();
-				suzanne1.draw();
-			}
-
-			if (selec == 2)
-			{
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 3)
-			{
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-				suzanne3.update();
-				suzanne3.draw();
-			}
-
-		}
-		else if (rotateZ)
-		{
-			//model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-			if (selec == 1)
-			{
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-				suzanne1.update();
-				suzanne1.draw();
-			}
-
-			if (selec == 2)
-			{
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 3)
-			{
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(-1.0, -1.0, -1.0), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-				suzanne3.update();
-				suzanne3.draw();
-			}
-		}
-
-		if (translateX)
-		{
-			if (selec == 1)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(3.0, 0.0, 0.0));
-				suzanne1.update();
-				suzanne1.draw();
-			}
-
-			if (selec == 2)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 3)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0));
-				suzanne3.update();
-				suzanne3.draw();
-			}
-
-		}
-
-		if (translateY)
-		{
-			if (selec == 1)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(3.0, 3.0, 0.0));
-				suzanne1.update();
-				suzanne1.draw();
-			}
-
-			if (selec == 2)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 3)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(0.0, -3.0, 0.0));
-				suzanne3.update();
-				suzanne3.draw();
-			}
-
-		}
-
-		if (translateZ)
-		{
-			if (selec == 1)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(3.0, 3.0, 3.0));
-				suzanne1.update();
-				suzanne1.draw();
-			}
-
-			if (selec == 2)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(-3.0, 0.0, 0.0));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 3)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(0.0, -3.0, -3.0));
-				suzanne3.update();
-				suzanne3.draw();
-			}
-
-		}
-
-		if (stopTranslate)
-		{
-			translateX = false;
-			translateY = false;
-			translateZ = false;
-
-			suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0));
-			suzanne2.initialize(VAO2, nVertices, &shader);
-			suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0));
-
-			stopTranslate = false;
-
-		}
-
-		if (scale)
-		{
-			if (selec == 1)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(0.5, 0.5, 0.5));
-				suzanne2.update();
-				suzanne2.draw();
-			}
-
-			if (selec == 2)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.5, 0.5, 0.5));
-				suzanne2.update();
-				suzanne2.draw();
-				
-			}
-
-			if (selec == 3)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(0.5, 0.5, 0.5));
-				suzanne2.update();
-				suzanne2.draw();
-				
-			}
-
-		}
-
-		if (scale == false)
-		{
-			if (selec == 1)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne1.initialize(VAO, nVertices1, &shader, glm::vec3(-3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
-			}
-
-			if (selec == 2)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne2.initialize(VAO2, nVertices, &shader, glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
-
-			}
-
-			if (selec == 3)
-			{
-				//model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-				suzanne3.initialize(VAO3, nVertices, &shader, glm::vec3(3.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
-
-			}
-
-		}
-
 		//Alterando a matriz de view (posição e orientação da câmera)
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
-
-		glm::mat4 projection = glm::perspective(glm::radians(fov), (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
-		glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
 
 		//Enviando a posição da camera para o shader
 		shader.setVec3("cameraPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
 		// Chamada de desenho - drawcall
-		suzanne1.update();
-		suzanne1.draw();
+		mesh.update();
+		mesh.draw();
 
-		suzanne2.update();
-		suzanne2.draw();
-
-		suzanne3.update();
-		suzanne3.draw();
+		
 
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
@@ -483,21 +217,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateZ = false;
 	}
 
-	if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-	{
-		selec = 1;
-	}
-
-	if (key == GLFW_KEY_2 && action == GLFW_PRESS)
-	{
-		selec = 2;
-	}
-
-	if (key == GLFW_KEY_3 && action == GLFW_PRESS)
-	{
-		selec = 3;
-	}
-
 	if (key == GLFW_KEY_Y && action == GLFW_PRESS)
 	{
 		rotateX = false;
@@ -511,46 +230,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateY = false;
 		rotateZ = true;
 	}
-
-	if (key == GLFW_KEY_P && action == GLFW_PRESS) //para qualquer movimento de rotação e volta a posição original dos objetos
-	{
-		stopRotate = true;
-		stopTranslate = true;
-	}
-
-	if (key == GLFW_KEY_J && action == GLFW_PRESS)
-	{
-		translateX = true;
-		translateY = false;
-		translateZ = false;
-	}
-
-	if (key == GLFW_KEY_K && action == GLFW_PRESS)
-	{
-		translateX = false;
-		translateY = true;
-		translateZ = false;
-	}
-
-	if (key == GLFW_KEY_L && action == GLFW_PRESS)
-	{
-		translateX = false;
-		translateY = false;
-		translateZ = true;
-	}
-
-
-	if (key == GLFW_KEY_N && action == GLFW_PRESS)
-	{
-		scale = true;
-	}
-
-	if (key == GLFW_KEY_M && action == GLFW_PRESS)
-	{
-		scale = false;
-	}
-
-
 
 	if (key == GLFW_KEY_W)
 	{
@@ -571,6 +250,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
+
 
 
 }
@@ -603,31 +283,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	front.y = sin(glm::radians(pitch));
 	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	cameraFront = glm::normalize(front);
-
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-	if (fov >= 1.0f && fov <= 45.0f)
-	{
-		fov -= yoffset;
-	}
-
-	if (fov <= 1.0f)
-	{
-		fov = 1.0f;
-	}
-
-	if (fov >= 45.0f)
-	{
-		fov = 45.0f;
-	}
-
-}
-
-void processInput(GLFWwindow* window)
-{
-	cameraSpeed = 2.5f * deltaTime;
 
 }
 
@@ -876,5 +531,47 @@ int loadSimpleObj(string filePath, int& nVertices, glm::vec3 color)
 
 	return VAO;
 
+}
+
+int generateTexture(string filePath)
+{
+	GLuint texID;
+
+	// Gera o identificador da textura na memória
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_2D, texID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
+
+	if (data)
+	{
+		if (nrChannels == 3) //jpg, bmp
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+				data);
+		}
+		else //png
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+				data);
+		}
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	stbi_image_free(data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return texID;
 }
 
