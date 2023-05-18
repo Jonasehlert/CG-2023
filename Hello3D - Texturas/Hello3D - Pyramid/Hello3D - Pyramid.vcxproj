@@ -22,11 +22,13 @@
     <ClCompile Include="..\..\Common\src\glad.c" />
     <ClCompile Include="..\..\Common\src\stb_image.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Origem.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <ItemGroup>
