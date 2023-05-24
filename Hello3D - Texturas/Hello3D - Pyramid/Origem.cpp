@@ -27,11 +27,9 @@ using namespace std;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <stb_image.h>
-
 #include "Shader.h"
 
-#include "Mesh.h"
+#include "Object.h"
 
 
 struct Vertex
@@ -118,15 +116,15 @@ int main()
 	// Compilando e buildando o programa de shader
 	Shader shader("Hello3D.vs", "Hello3D.fs");
 
-	GLuint texID = generateTexture("../../3D_models/Suzanne/example.bmp");
+	//GLuint texID = generateTexture("../../3D_models/Suzanne/example.bmp");
 
 
 	// Gerando um buffer simples, com a geometria de um triângulo
-	int nVertices;
+	//int nVertices;
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Classic/bunny.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Cube/cube.obj", nVertices);
 	//GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices);
-	GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/bola.obj", nVertices);
+	//GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/bola.obj", nVertices);
 	
 	glUseProgram(shader.ID);
 
@@ -156,9 +154,10 @@ int main()
 	shader.setVec3("lightPos", -2.0f, 10.0f, 3.0f);
 	shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	Mesh mesh;
-	mesh.initialize(VAO, nVertices, &shader, texID, glm::vec3(0.0, 0.0, 0.0));
-	
+	//Mesh mesh;
+	//mesh.initialize(VAO, nVertices, &shader, texID, glm::vec3(0.0, 0.0, 0.0));
+	Object obj;
+	obj.initialize("../../3D_models/Pokemon/Pikachu.obj", &shader);
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(shader.ID, "colorBuffer"), 0);
@@ -187,16 +186,17 @@ int main()
 		shader.setVec3("cameraPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
 		// Chamada de desenho - drawcall
-		mesh.update();
-		mesh.draw();
-
+		//mesh.update();
+		//mesh.draw();
+		obj.update();
+		obj.draw();
 		
 
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
 	}
 	// Pede pra OpenGL desalocar os buffers
-	glDeleteVertexArrays(1, &VAO);
+	//glDeleteVertexArrays(1, &VAO);
 	// Finaliza a execução da GLFW, limpando os recursos alocados por ela
 	glfwTerminate();
 	return 0;
