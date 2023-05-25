@@ -96,10 +96,10 @@ int main (int argc, char** argv)
 	float bounds[4] = {2.0, 6.0, 1.0, 5.0};
 	
 	//Modo padrão
-	//heightMap = BuildAHeightMap(1024, 1024, bounds);
+	heightMap = BuildAHeightMap(1024, 1024, bounds);
 
 	//Para criar o mapa com projeção esférica
-	heightMap = BuildASphericalHeightMap(1024, 1024, bounds);
+	//heightMap = BuildASphericalHeightMap(1024, 1024, bounds);
 	
 	
 	RenderHeightMap(heightMap,"../example.bmp");
