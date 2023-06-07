@@ -20,15 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\src\glad.c" />
+    <ClCompile Include="..\..\Common\src\Shader.cpp" />
+    <ClCompile Include="Bezier.cpp" />
+    <ClCompile Include="Curve.cpp" />
     <ClCompile Include="Origem.cpp" />
-    <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Shader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Hello3D.fs" />
-    <None Include="Hello3D.vs" />
+    <ClInclude Include="Bezier.h" />
+    <ClInclude Include="Curve.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -100,7 +99,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../dependencies/glfw-3.3.4.bin.WIN32/include;../../dependencies/GLAD/include;../../dependencies/glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../dependencies/glfw-3.3.4.bin.WIN32/include;../../dependencies/GLAD/include;../../Common/include;../../dependencies/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

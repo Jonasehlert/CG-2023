@@ -1,4 +1,4 @@
-// CÃ³digo fonte do Vertex Shader (em GLSL)
+// Código fonte do Vertex Shader (em GLSL)
 #version 450
 
 layout (location = 0) in vec3 position;
@@ -11,7 +11,7 @@ out vec4 finalColor;
 
 void main()
 {
-	//...pode ter mais linhas de cÃ³digo aqui!
+	//...pode ter mais linhas de código aqui!
 	gl_Position = projection * view * model * vec4(position, 1.0);
 	finalColor = vec4(color, 1.0);
 }

@@ -10,9 +10,6 @@
 #include <iostream>
 #include <string>
 #include <assert.h>
-#include <fstream>
-#include <sstream>
-#include <vector>
 
 using namespace std;
 
@@ -27,41 +24,18 @@ using namespace std;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Shader.h"
-
-
-struct Vertex
-{
-	glm::vec3 position;
-	glm::vec3 v_color;
-};
 
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 // Protótipos das funções
+int setupShader();
 int setupGeometry();
-int loadSimpleObj(string filePath, int& nVertices);
-
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
 bool rotateX=false, rotateY=false, rotateZ=false;
-
-glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0);
-glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
-glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
-float cameraSpeed = 0.05;
-
-bool firstMouse = true;
-float lastX = 0.0, lastY = 0.0;
-float yaw = -90.0, pitch = 0.0;
-
-vector <Vertex> vertices;
-vector <int> indices;
-
 
 // Função MAIN
 int main()
@@ -88,12 +62,6 @@ int main()
 
 	// Fazendo o registro da função de callback para a janela GLFW
 	glfwSetKeyCallback(window, key_callback);
-	//glfwSetCursorPos(window, WIDTH / 2, HEIGHT / 2);
-	glfwSetCursorPosCallback(window, mouse_callback);
-
-
-	//Desabilita o desenho do cursor do mouse
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// GLAD: carrega todos os ponteiros d funções da OpenGL
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -115,38 +83,22 @@ int main()
 
 
 	// Compilando e buildando o programa de shader
-	Shader shader("Hello3D.vs", "Hello3D.fs");
+	GLuint shaderID = setupShader();
 
 	// Gerando um buffer simples, com a geometria de um triângulo
-	int nVertices;
-	//GLuint VAO = loadSimpleObj("../../3D_Models/Classic-NoTexture/bunny.obj", nVertices);
-	//GLuint VAO = loadSimpleObj("../../3D_Models/Cube/cube.obj", nVertices);
-	//GLuint VAO = loadSimpleObj("../../3D_Models/Pokemon/Pikachu.obj", nVertices);
-	GLuint VAO = loadSimpleObj("../../3D_Models/Suzanne/SuzanneTriLowpoly.obj", nVertices);
+	GLuint VAO = setupGeometry();
 
-	glUseProgram(shader.ID);
+
+	glUseProgram(shaderID);
 
 	glm::mat4 model = glm::mat4(1); //matriz identidade;
-	GLint modelLoc = glGetUniformLocation(shader.ID, "model");
+	GLint modelLoc = glGetUniformLocation(shaderID, "model");
 	//
 	model = glm::rotate(model, /*(GLfloat)glfwGetTime()*/glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
 
-	//Definindo a matriz de view (posição e orientação da câmera)
-	glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-	GLint viewLoc = glGetUniformLocation(shader.ID, "view");
-	glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
-
-	//Definindo a matriz de projeção perpectiva
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
-	GLint projLoc = glGetUniformLocation(shader.ID, "projection");
-	glUniformMatrix4fv(projLoc, 1, FALSE, glm::value_ptr(projection));
-
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
 
-
-	shader.setBool("isContour", false);
 
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
@@ -158,14 +110,13 @@ int main()
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //cor de fundo
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glLineWidth(3);
+		glLineWidth(10);
 		glPointSize(20);
 
 		float angle = (GLfloat)glfwGetTime();
 
 		model = glm::mat4(1); 
 
-		// model = glm::translate(model, glm::vec3(0.0, 0.0, cos(angle) * 10.0));
 		if (rotateX)
 		{
 			model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -183,35 +134,17 @@ int main()
 		}
 
 		glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
-
-		//Alterando a matriz de view (posição e orientação da câmera)
-		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
-
-
-
 		// Chamada de desenho - drawcall
 		// Poligono Preenchido - GL_TRIANGLES
 		
 		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 18);
 
-		shader.setBool("isContour", false);
-		glDrawArrays(GL_TRIANGLES, 0, nVertices);
-
-		model = glm::scale(model, glm::vec3(1.001,1.001,1.001));
-		glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
-		shader.setBool("isContour", true);
-		for (int i = 0; i < nVertices-3; i+=3)
-		{
-			glDrawArrays(GL_LINE_LOOP, i, 3);		
-		}
-		
-		glBindVertexArray(0);
 		// Chamada de desenho - drawcall
 		// CONTORNO - GL_LINE_LOOP
 		
-		//glDrawArrays(GL_POINTS, 0, nVertices);
-		//
+		glDrawArrays(GL_POINTS, 0, 18);
+		glBindVertexArray(0);
 
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
@@ -252,61 +185,57 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateZ = true;
 	}
 
-	if (key == GLFW_KEY_W)
-	{
-		cameraPos += cameraSpeed * cameraFront;
-	}
-
-	if (key == GLFW_KEY_S)
-	{
-		cameraPos -= cameraSpeed * cameraFront;
-	}
-
-	if (key == GLFW_KEY_A)
-	{
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	}
-
-	if (key == GLFW_KEY_D)
-	{
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	}
-
 
 
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+//Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
+// shader simples e único neste exemplo de código
+// O código fonte do vertex e fragment shader está nos arrays vertexShaderSource e
+// fragmentShader source no iniçio deste arquivo
+// A função retorna o identificador do programa de shader
+int setupShader()
 {
-
-	// cout << xpos << " " << ypos << endl;
-
-	if (firstMouse)
+	// Vertex shader
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+	// Checando erros de compilação (exibição via log no terminal)
+	GLint success;
+	GLchar infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	if (!success)
 	{
-		lastX = xpos;
-		lastY = ypos;
-		firstMouse = false;
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
+	// Fragment shader
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);
+	// Checando erros de compilação (exibição via log no terminal)
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+	// Linkando os shaders e criando o identificador do programa de shader
+	GLuint shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+	// Checando por erros de linkagem
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
 
-	float offsetx = xpos - lastX;
-	float offsety = lastY - ypos;
-	lastX = xpos;
-	lastY = ypos;
-
-	offsetx *= cameraSpeed;
-	offsety *= cameraSpeed;
-
-	pitch += offsety;
-	yaw += offsetx;
-
-	glm::vec3 front;
-	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	front.y = sin(glm::radians(pitch));
-	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	cameraFront = glm::normalize(front);
-
+	return shaderProgram;
 }
-
 
 // Esta função está bastante harcoded - objetivo é criar os buffers que armazenam a 
 // geometria de um triângulo
@@ -347,15 +276,6 @@ int setupGeometry()
 		   0.5, -0.5, 0.5, 0.0, 1.0, 1.0,
 		  0.0,  0.5,  0.0, 0.0, 1.0, 1.0,
 		  0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
-
-		  //"Chão"
-		  -5.0, -0.5, -5.0, 0.5, 0.5, 0.5,
-		  -5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
-		   5.0, -0.5, -5.0, 0.5, 0.5, 0.5,
-
-		  -5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
-		   5.0, -0.5,  5.0, 0.5, 0.5, 0.5,
-		   5.0, -0.5, -5.0, 0.5, 0.5, 0.5
 
 
 	};
@@ -404,113 +324,5 @@ int setupGeometry()
 	glBindVertexArray(0);
 
 	return VAO;
-}
-
-int loadSimpleObj(string filePath, int& nVertices)
-{
-	ifstream inputFile;
-	inputFile.open(filePath);
-	vector <GLfloat> vertbuffer;
-
-	if (inputFile.is_open())
-	{
-		char line[100];
-		string sline;
-		
-
-		while (!inputFile.eof())
-		{
-			inputFile.getline(line, 100);
-			sline = line;
-
-			string word;
-			istringstream ssline(sline);
-
-			ssline >> word;
-
-			if (word == "v")
-			{
-				Vertex v;
-				ssline >> v.position.x >> v.position.y >> v.position.z;
-				v.v_color.r = 1.0; v.v_color.g = 0.0; v.v_color.b = 0.0;
-				vertices.push_back(v);
-			}
-			else if (word == "f")
-			{
-				string tokens[3];
-				for (int i = 0; i < 3; i++)
-				{
-					ssline >> tokens[i];
-					int pos = tokens[i].find("/");
-					string token = tokens[i].substr(0, pos);
-					int index = atoi(token.c_str()) - 1;
-					indices.push_back(index);
-					vertbuffer.push_back(vertices[index].position.x);
-					vertbuffer.push_back(vertices[index].position.y);
-					vertbuffer.push_back(vertices[index].position.z);
-					vertbuffer.push_back(vertices[index].v_color.r);
-					vertbuffer.push_back(vertices[index].v_color.g);
-					vertbuffer.push_back(vertices[index].v_color.b);
-				}
-			
-			}
-
-		}
-
-		inputFile.close();
-	}
-	else
-	{
-		cout << "Não foi possivel abrir o arquivo " << filePath << endl;
-	}
-
-
-	nVertices = vertbuffer.size() / 6;
-
-	GLuint VBO, VAO;
-
-	//Geração do identificador do VBO
-	glGenBuffers(1, &VBO);
-
-	//Faz a conexão (vincula) do buffer como um buffer de array
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	//Envia os dados do array de floats para o buffer da OpenGl
-	glBufferData(GL_ARRAY_BUFFER, vertbuffer.size() * sizeof(GLfloat), vertbuffer.data(), GL_STATIC_DRAW);
-
-	//Geração do identificador do VAO (Vertex Array Object)
-	glGenVertexArrays(1, &VAO);
-
-	// Vincula (bind) o VAO primeiro, e em seguida  conecta e seta o(s) buffer(s) de vértices
-	// e os ponteiros para os atributos 
-	glBindVertexArray(VAO);
-
-	//Para cada atributo do vertice, criamos um "AttribPointer" (ponteiro para o atributo), indicando: 
-	// Localização no shader * (a localização dos atributos devem ser correspondentes no layout especificado no vertex shader)
-	// Numero de valores que o atributo tem (por ex, 3 coordenadas xyz) 
-	// Tipo do dado
-	// Se está normalizado (entre zero e um)
-	// Tamanho em bytes 
-	// Deslocamento a partir do byte zero 
-
-	//Atributo posição (x, y, z)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-
-	//Atributo cor (r, g, b)
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-
-
-
-	// Observe que isso é permitido, a chamada para glVertexAttribPointer registrou o VBO como o objeto de buffer de vértice 
-	// atualmente vinculado - para que depois possamos desvincular com segurança
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// Desvincula o VAO (é uma boa prática desvincular qualquer buffer ou array para evitar bugs medonhos)
-	glBindVertexArray(0);
-
-	return VAO;
-
 }
 
