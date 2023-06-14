@@ -24,9 +24,6 @@
     <ClCompile Include="Curve.cpp">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\src\Shader.cpp">
-      <Filter>Arquivos de Origem</Filter>
-    </ClCompile>
     <ClCompile Include="Bezier.cpp">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
