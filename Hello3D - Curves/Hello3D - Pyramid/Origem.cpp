@@ -37,6 +37,28 @@ const GLuint WIDTH = 1000, HEIGHT = 1000;
 
 bool rotateX=false, rotateY=false, rotateZ=false;
 
+// Código fonte do Vertex Shader (em GLSL): ainda hardcoded
+const GLchar* vertexShaderSource = "#version 450\n"
+"layout (location = 0) in vec3 position;\n"
+"layout (location = 1) in vec3 color;\n"
+"uniform mat4 model;\n"
+"out vec4 finalColor;\n"
+"void main()\n"
+"{\n"
+//...pode ter mais linhas de código aqui!
+"gl_Position = model * vec4(position, 1.0);\n"
+"finalColor = vec4(color, 1.0);\n"
+"}\0";
+
+//Códifo fonte do Fragment Shader (em GLSL): ainda hardcoded
+const GLchar* fragmentShaderSource = "#version 450\n"
+"in vec4 finalColor;\n"
+"out vec4 color;\n"
+"void main()\n"
+"{\n"
+"color = finalColor;\n"
+"}\n\0";
+
 // Função MAIN
 int main()
 {
