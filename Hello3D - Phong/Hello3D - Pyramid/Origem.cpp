@@ -28,7 +28,6 @@ using namespace std;
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Shader.h"
-
 #include "Mesh.h"
 
 
