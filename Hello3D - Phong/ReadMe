@@ -1,6 +1,6 @@
 #####################################################################################
 
-Nomes: Isadora Ghisleni e Jonas Dall Agnol Ehlert
+Nome:Jonas Dall Agnol Ehlert
 
 Controle do Programa
 
@@ -9,9 +9,8 @@ Mouse movimenta a câmera também
 Scroll do mouse dá zoom in e zoom out dos objetos
 
 Seleção de Objetos
-Tecla 1 - seleciona o Pikachu
-Tecla 2 - seleciona primeira Suzanne (verde)
-Tecla 3 - seleciona segunda Suzanne (azul)
+Tecla 1 - seleciona o Pikachu 1
+Tecla 2 - seleciona o Pikachu 2
 
 Rotação 
 Tecla X - rotaciona em X
